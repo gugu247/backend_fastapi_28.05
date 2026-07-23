@@ -79,3 +79,20 @@ class Filter(BaseModel):
 class ItogFilter(Filter):
     id: int
     colichestvo: int
+
+
+
+
+
+class UserCreate(BaseModel):
+    username: str = Field(min_length=2,max_length=80)
+    password: str = Field(min_length=2,max_length=80)
+
+class UserProfile(BaseModel):
+    id: int 
+    username: str
+    role: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str

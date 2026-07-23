@@ -1,5 +1,5 @@
 from schemas import Project, ProjectCreate, ProjectUpdate, Task,PeopleCreate,PeopleUpdate, People, Filter, ItogFilter, TaskCreate, TaskUpdate, \
-    StatKolvo, StatKorzina, StatKorzinaInfo
+    StatKolvo, StatKorzina, StatKorzinaInfo, UserProfile
 
 import sqlite3
 
@@ -62,6 +62,27 @@ def create_table_pl():
                 CREATE TABLE IF NOT EXISTS peoples (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL DEFAULT []
+                )
+            """
+        )
+
+
+
+def get_connection_user():
+    connection = sqlite3.connect('/users.db')
+    connection.row_factory = sqlite3.Row
+    return connection
+
+def create_table_user():
+    with get_connection_user() as connection:
+        connection.execute(
+            """
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL UNIQUE,
+                    password_hash TEXT NOT NULL,
+                    role TEXT NOT NULL DEFAULT 'user',
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
             """
         )
@@ -429,3 +450,45 @@ def delete_people(people_id:int) -> bool:
             return True
         else:
             return False
+
+
+
+
+def row_user(row:sqlite3.Row) -> UserProfile:
+    return UserProfile(
+        id=row['id'],
+        username=row['id'],
+        role=row['id']
+    )
+
+def get_user_by_id(user_id:int) -> UserProfile | None:
+    with get_connection_user() as connection:
+        row = connection.execute('SELECT * FROM users WHERE id=?',(user_id,)).fetchone()
+        if row is None:
+            return None
+        return row_user(row)
+
+def get_user_by_username(username:str) -> sqlite3.Row | None:
+    with get_connection_user() as connection:
+        row = connection.execute('SELECT * FROM users WHERE username=?',(username,)).fetchone()
+        if row is None:
+            return None
+        return row
+
+def create_user(username:str,password_hash:str) -> UserProfile | None:
+    with get_connection_user() as connection:
+        cursor = connection.execute(
+            """
+                INSERT INTO users (
+                    username,
+                    password_hash
+                )
+                VALUES(?,?)
+            """,
+            (username,password_hash)
+        )
+        user_id = cursor.lastrowid
+        user = get_user_by_id(user_id)
+        if user is None:
+            return None
+        return user
