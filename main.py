@@ -1,13 +1,20 @@
+from http.client import HTTPException
+
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.params import Depends
 from pydantic import BaseModel, Field
 
 import database_
 from schemas import Project, ProjectCreate, ProjectUpdate, Task, People, Filter, ItogFilter, TaskCreate, TaskUpdate, \
-    StatKolvo, StatKorzina, StatKorzinaInfo
+    StatKolvo, StatKorzina, StatKorzinaInfo, UserProfile, UserCreate, Token
 from database_ import projects, tasks, task_stat, kolvo_stat, count_stat
 from database_ import get_project,get_project_by_id,get_people,get_people_by_id,get_task,get_task_by_id,create_project,create_task, \
 create_people,update_project,update_task,update_people,delete_project,delete_task,delete_people
+
+import auth
+from fastapi import HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 
 database_.create_table_pr()
 database_.create_table_task()
@@ -132,7 +139,7 @@ def post_tasks(task_data: TaskCreate):
 
 
 @app.patch('/tasks/{task_id}')
-def patch_task(task_data: TaskUpdate, task_id: int):
+def patch_task(task_id:int,task_data: TaskUpdate):
     # task_ind = 0
     # for task in tasks:
     #     if task.id == task_id:
@@ -182,13 +189,42 @@ def priority_plus_one(task_id: int):
 def stat(task_id: int):
     for task in tasks:
         if task.id == task_id:
-            task_stat.append(task_id)
+            element_StatKorzina = StatKorzina(task_id=task_id)
+            task_stat.append(element_StatKorzina)
             kolvo_stat.append(task)
             database_.count_stat += 1
 
 
-def get_task_by_id(task_id: int) -> StatKorzina | None:
+def get_task_by_id_mainpy(task_id: int) -> StatKorzina | None:
     for task in task_stat:
         if task.task_id == task_id:
             return task
     return None
+
+
+@app.post('/auth/register', response_model=UserProfile)
+def register(user_data: UserCreate):
+    if database_.get_user_record_by_username(user_data.username) is not None:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail='User с таким login уже есть'
+        )
+    return database_.create_user(
+        username=user_data.username,
+        password_hash=auth.hash_password(user_data.password)
+    )
+
+
+@app.post('/auth/login', response_model=Token)
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = auth.authenticate_user(
+        form_data.username,
+        form_data.password
+    )
+    if user is None:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            detail='Неверный логин или пароль'
+        )
+    return Token(access_token=auth.create_access_token(user), token_type='bearer')
+

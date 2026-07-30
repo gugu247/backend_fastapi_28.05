@@ -15,8 +15,6 @@ class TaskUpdate(BaseModel):
     priority: int | None = Field(default=None,ge=1,le=5)
     end_time: str | None = Field(default=None,min_length=10,max_length=10)
 
-
-
 class Task(TaskCreate):
     id: int
 
@@ -60,8 +58,8 @@ class ProjectCreate(BaseModel):
 class ProjectUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=50)
     description: str | None = Field(default=None)
-    tasks: Task | None = Field(default=None)
-    peoples: People | None = Field(default=None)
+    tasks: list[Task] | None = Field(default=None)
+    peoples: list[People] | None = Field(default=None)
     end_time: str | None = Field(default=None)
     status: str | None = Field(default=None)
 

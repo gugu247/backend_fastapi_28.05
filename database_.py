@@ -5,7 +5,7 @@ import sqlite3
 
 
 def get_connection_pr():
-    connection = sqlite3.connect('/projects.db')
+    connection = sqlite3.connect('projects.db')
     connection.row_factory = sqlite3.Row
     return connection
 
@@ -29,7 +29,7 @@ def create_table_pr():
 
 
 def get_connection_task():
-    connection = sqlite3.connect('/tasks.db')
+    connection = sqlite3.connect('tasks.db')
     connection.row_factory = sqlite3.Row
     return connection
 
@@ -43,7 +43,7 @@ def create_table_task():
                     description TEXT NOT NULL,
                     status TEXT NOT NULL,
                     priority INTEGER,
-                    end_time TEXT NOT NULL,
+                    end_time TEXT NOT NULL
                 )
             """
         )
@@ -51,7 +51,7 @@ def create_table_task():
 
 
 def get_connection_pl():
-    connection = sqlite3.connect('/peoples.db')
+    connection = sqlite3.connect('peoples.db')
     connection.row_factory = sqlite3.Row
     return connection
 
@@ -69,7 +69,7 @@ def create_table_pl():
 
 
 def get_connection_user():
-    connection = sqlite3.connect('/users.db')
+    connection = sqlite3.connect('users.db')
     connection.row_factory = sqlite3.Row
     return connection
 
@@ -126,7 +126,7 @@ tasks=[
     task1,task2,task3,task4
 ]
 
-peoples = [People(id=1),People(id=2)]
+peoples = [People(id=1,name='Chel1'),People(id=2,name='Chel2')]
 
 
 task_stat: list[StatKorzina] = []
@@ -138,7 +138,8 @@ count_stat = 0
 
 
 
-proj1 = ProjectCreate(
+proj1 = Project(
+    id=1,
     title="Job",
     description="Zarabotat dengi na leto",
     tasks=tasks,
@@ -156,7 +157,6 @@ filt1 = Filter(project_id=1, people=None)
 filters = [
     filt1,
 ]
-
 
 
 
@@ -203,7 +203,7 @@ def zapoln_defaults():
                         priority,
                         end_time
                     )
-                    VALUES(?,?,?,?,?)
+                    VALUES (?,?,?,?,?)
                     """,
                     (
                         task.title,
@@ -468,7 +468,7 @@ def get_user_by_id(user_id:int) -> UserProfile | None:
             return None
         return row_user(row)
 
-def get_user_by_username(username:str) -> sqlite3.Row | None:
+def get_user_record_by_username(username:str) -> sqlite3.Row | None:
     with get_connection_user() as connection:
         row = connection.execute('SELECT * FROM users WHERE username=?',(username,)).fetchone()
         if row is None:
