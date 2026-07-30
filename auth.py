@@ -5,7 +5,7 @@ import jwt
 from pwdlib import PasswordHash
 from fastapi import Depends,HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jwt.exceptions import InvalidTokenError
+#from jwt.exceptions import InvalidTokenError
 
 import database_
 from schemas import UserProfile
@@ -92,7 +92,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> UserProfile:
             raise token_exception
 
         user_id = int(sub)
-    except (InvalidTokenError, ValueError, TypeError):
+    except (ValueError, TypeError):
         raise token_exception
 
     user = database_.get_user_by_id(user_id)

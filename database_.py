@@ -1,11 +1,24 @@
+from os.path import split
+
 from schemas import Project, ProjectCreate, ProjectUpdate, Task,PeopleCreate,PeopleUpdate, People, Filter, ItogFilter, TaskCreate, TaskUpdate, \
     StatKolvo, StatKorzina, StatKorzinaInfo, UserProfile
 
 import sqlite3
+import os
+
+
+
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent
+DATABASE_PATH = Path(
+    os.getenv('DATABASE_PATH', str(BASE_DIR / 'projects.db'))
+)
+
+
 
 
 def get_connection_pr():
-    connection = sqlite3.connect('projects.db')
+    connection = sqlite3.connect(DATABASE_PATH)
     connection.row_factory = sqlite3.Row
     return connection
 
@@ -28,13 +41,13 @@ def create_table_pr():
 
 
 
-def get_connection_task():
-    connection = sqlite3.connect('tasks.db')
-    connection.row_factory = sqlite3.Row
-    return connection
+# def get_connection_pr():
+#     connection = sqlite3.connect('tasks.db')
+#     connection.row_factory = sqlite3.Row
+#     return connection
 
 def create_table_task():
-    with get_connection_task() as connection:
+    with get_connection_pr() as connection:
         connection.execute(
             """
                 CREATE TABLE IF NOT EXISTS tasks (
@@ -50,13 +63,13 @@ def create_table_task():
 
 
 
-def get_connection_pl():
-    connection = sqlite3.connect('peoples.db')
-    connection.row_factory = sqlite3.Row
-    return connection
+# def get_connection_pr():
+#     connection = sqlite3.connect('peoples.db')
+#     connection.row_factory = sqlite3.Row
+#     return connection
 
 def create_table_pl():
-    with get_connection_pl() as connection:
+    with get_connection_pr() as connection:
         connection.execute(
             """
                 CREATE TABLE IF NOT EXISTS peoples (
@@ -68,13 +81,9 @@ def create_table_pl():
 
 
 
-def get_connection_user():
-    connection = sqlite3.connect('users.db')
-    connection.row_factory = sqlite3.Row
-    return connection
 
 def create_table_user():
-    with get_connection_user() as connection:
+    with get_connection_pr() as connection:
         connection.execute(
             """
                 CREATE TABLE IF NOT EXISTS users (
@@ -165,7 +174,20 @@ def zapoln_defaults():
         projects_len = connection.execute("SELECT COUNT(*) FROM projects").fetchone()[0]
         if projects_len > 0:
             return 'OK not null projects_len'
+        tmp_tasks = ""
+        tmp_peoples = ''
+        print(len(tasks))
         for project in projects:
+
+            for task in tasks:
+                str_tasks = ''
+                str_tasks += str(task.id) + '|' + str(task.title) + '|' + str(task.description) + '|' + str(task.status) + '|' + str(task.priority) + '|' + str(task.end_time)
+                tmp_tasks += str_tasks + "}"
+            for people in peoples:
+                str_peoples = ''
+                str_peoples += str(people.id) + '|' + str(people.name)
+                tmp_peoples += str_peoples + '}'
+
             connection.execute(
                 """
                 INSERT INTO projects (
@@ -181,14 +203,14 @@ def zapoln_defaults():
                 (
                     project.title,
                     project.description,
-                    project.tasks,
-                    project.peoples,
+                    tmp_tasks,
+                    str_peoples,
                     project.end_time,
                     project.status,
                 )
             )
     
-    with get_connection_task() as connection:
+    with get_connection_pr() as connection:
         task_len = connection.execute('SELECT COUNT(*) FROM tasks').fetchone()[0]
         if task_len > 0:
             return "OK task is exist"
@@ -214,7 +236,7 @@ def zapoln_defaults():
                     )
                 )
     
-    with get_connection_pl() as connection:
+    with get_connection_pr() as connection:
         people_len = connection.execute('SELECT COUNT(*) FROM peoples').fetchone()[0]
         if people_len > 0:
             return "OK people is exist"
@@ -235,7 +257,7 @@ def zapoln_defaults():
 
 def row_project(row:sqlite3.Row) -> Project: #Переводим из формата sql в формат python
     newProject = Project(
-        id=row["id"],
+        id=int(row["id"]),
         title=row["title"],
         description=row["description"],
         tasks=row["tasks"],
@@ -263,6 +285,15 @@ def get_project_by_id(project_id: int) -> Project | None:
 
 def create_project(project: ProjectCreate) -> Project:
     with get_connection_pr() as connection:
+        for task in tasks:
+            str_tasks = ''
+            str_tasks += str(task.id) + '|' + str(task.title) + '|' + str(task.description) + '|' + str(
+                task.status) + '|' + str(task.priority) + '|' + str(task.end_time)
+
+        for people in peoples:
+            str_peoples = ''
+            str_peoples += str(people.id) + '|' + str(people.name)
+
         cursor = connection.execute(
             """
             INSERT INTO projects (
@@ -278,8 +309,8 @@ def create_project(project: ProjectCreate) -> Project:
             (
                 project.title,
                 project.description,
-                project.tasks,
-                project.peoples,
+                str_tasks,
+                str_peoples,
                 project.end_time,
                 project.status,
             )
@@ -325,7 +356,7 @@ def row_task(row:sqlite3.Row) -> Task: #Переводим из формата s
     return newTask
 
 def get_task() -> list[Task]:
-    with get_connection_task() as connection:
+    with get_connection_pr() as connection:
         rows = connection.execute('SELECT * FROM tasks ORDER BY id').fetchall()
         list_temp = []
         for row in rows:
@@ -334,7 +365,7 @@ def get_task() -> list[Task]:
         return list_temp
 
 def get_task_by_id(task_id:int) -> Task | None:
-    with get_connection_task() as connection:
+    with get_connection_pr() as connection:
         row = connection.execute('SELECT * FROM tasks WHERE id=?',(task_id,)).fetchone()
     if row is None:
         return None
@@ -368,7 +399,7 @@ def create_task(task: TaskCreate) -> Task:
 def update_task(task_id: int, task: TaskUpdate) -> Task | None:
     updates = task.model_dump(exclude_unset=True)
     izmen_fields = ('title','description','status') 
-    with get_connection_task() as connection:
+    with get_connection_pr() as connection:
         if connection.execute("""SELECT 1 FROM tasks WHERE id=?""",(task_id,)).fetchone() is None:
             return None
         if updates:
@@ -399,7 +430,7 @@ def row_people(row:sqlite3.Row) -> People:
     return newPeople
 
 def get_people() -> list[People]:
-    with get_connection_pl() as connection:
+    with get_connection_pr() as connection:
         rows = connection.execute('SELECT * FROM peoples').fetchall()
         list_tmp = []
         for row in rows:
@@ -408,14 +439,14 @@ def get_people() -> list[People]:
         return list_tmp
 
 def get_people_by_id(people_id:int) -> People | None:
-    with get_connection_pl() as connection:
+    with get_connection_pr() as connection:
         row = connection.execute('SELECT * FROM peoples WHERE id=?',(people_id,)).fetchone()
         if row is None:
             return None
         return row_people(row)
     
 def create_people(people: PeopleCreate) -> People:
-    with get_connection_pl() as connection:
+    with get_connection_pr() as connection:
         cursor = connection.execute(
             """
             INSERT INTO projects (
@@ -434,7 +465,7 @@ def create_people(people: PeopleCreate) -> People:
 def update_people(people_id: int, people: PeopleUpdate) -> People | None:
     updates = people.model_dump(exclude_unset=True)
     izmen_fields = ('name') 
-    with get_connection_pl() as connection:
+    with get_connection_pr() as connection:
         if connection.execute("""SELECT 1 FROM peoples WHERE id=?""",(people_id,)).fetchone() is None:
             return None
         if updates:
@@ -444,7 +475,7 @@ def update_people(people_id: int, people: PeopleUpdate) -> People | None:
         return row_people(row)
 
 def delete_people(people_id:int) -> bool:
-    with get_connection_pl() as connection:
+    with get_connection_pr() as connection:
         cursor = connection.execute("DELETE FROM peoples WHERE id = ?",(people_id,))
         if cursor.rowcount > 0:
             return True
@@ -462,21 +493,21 @@ def row_user(row:sqlite3.Row) -> UserProfile:
     )
 
 def get_user_by_id(user_id:int) -> UserProfile | None:
-    with get_connection_user() as connection:
+    with get_connection_pr() as connection:
         row = connection.execute('SELECT * FROM users WHERE id=?',(user_id,)).fetchone()
         if row is None:
             return None
         return row_user(row)
 
 def get_user_record_by_username(username:str) -> sqlite3.Row | None:
-    with get_connection_user() as connection:
+    with get_connection_pr() as connection:
         row = connection.execute('SELECT * FROM users WHERE username=?',(username,)).fetchone()
         if row is None:
             return None
         return row
 
 def create_user(username:str,password_hash:str) -> UserProfile | None:
-    with get_connection_user() as connection:
+    with get_connection_pr() as connection:
         cursor = connection.execute(
             """
                 INSERT INTO users (

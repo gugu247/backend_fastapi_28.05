@@ -50,8 +50,8 @@ class People(PeopleCreate):
 class ProjectCreate(BaseModel):
     title: str = Field(min_length=1, max_length=50)
     description: str
-    tasks: list[Task]
-    peoples: list[People]
+    tasks: list[Task] | str
+    peoples: list[People] | str
     end_time: str
     status: str
 

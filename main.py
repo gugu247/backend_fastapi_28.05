@@ -41,13 +41,9 @@ def root():
     return {'message': 'GoalPlan'}
 
 
-@app.get("/projects", response_model=list[Project])
-def get_pr(people: People):
-    projects_cat = []
-    for project in projects_cat:
-        if people.lower() in project.peoples:
-            projects_cat.append(project)
-    return projects_cat
+@app.get("/all-projects",response_model=list[Project])
+def get_pr():
+    return get_project()
 
 
 @app.get('/projects/search')
