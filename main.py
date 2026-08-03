@@ -18,6 +18,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 database_.create_table_pr()
 database_.create_table_task()
+database_.create_table_pl()
+database_.create_table_user()
+
 database_.zapoln_defaults()
 
 
