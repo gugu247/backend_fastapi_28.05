@@ -256,7 +256,7 @@ def zapoln_defaults():
 
 
 def row_project(row:sqlite3.Row) -> Project: #Переводим из формата sql в формат python
-    newProject = Project(
+    return Project(
         id=int(row["id"]),
         title=row["title"],
         description=row["description"],
@@ -265,7 +265,6 @@ def row_project(row:sqlite3.Row) -> Project: #Переводим из форма
         end_time=row["end_time"],
         status=row["status"],
     )
-    return newProject
 
 def get_project() -> list[Project]:
     with get_connection_pr() as connection:
@@ -281,6 +280,7 @@ def get_project_by_id(project_id: int) -> Project | None:
         row = connection.execute("SELECT * FROM projects WHERE id = ?", (project_id,)).fetchone()
     if row is None:
         return None
+    print(row_project(row))
     return row_project(row)
 
 def create_project(project: ProjectCreate) -> Project:
@@ -321,12 +321,14 @@ def create_project(project: ProjectCreate) -> Project:
 
 def update_project(project_id: int, project: ProjectUpdate) -> Project | None:
     updates = project.model_dump(exclude_unset=True)
+    print(updates)
     izmen_fields = ('title','description','status') 
     with get_connection_pr() as connection:
         if connection.execute("""SELECT 1 FROM projects WHERE id=?""",(project_id,)).fetchone() is None:
             return None
         if updates:
-            for key, value in updates: #key - это izmen_fields, то есть ячейки таблицы
+            for key, value in updates.items(): #key - это izmen_fields, то есть ячейки таблицы
+                print(key, value)
                 connection.execute(f"UPDATE projects SET {key} = {value} WHERE id={project_id}")
         row = connection.execute("""SELECT * FROM projects WHERE id=?""",(project_id,)).fetchone()
         return row_project(row)
@@ -350,7 +352,7 @@ def row_task(row:sqlite3.Row) -> Task: #Переводим из формата s
         title=row['title'],
         description=row['description'],
         status=row['status'],
-        priority=row['id'],
+        priority=row['priority'],
         end_time=row['end_time'],
     )
     return newTask
@@ -425,7 +427,7 @@ def delete_task(tasks_id:int) -> bool:
 def row_people(row:sqlite3.Row) -> People:
     newPeople = People(
         id=row['id'],
-        name=row['id']
+        name=row['name']
     )
     return newPeople
 
@@ -487,26 +489,47 @@ def delete_people(people_id:int) -> bool:
 
 def row_user(row:sqlite3.Row) -> UserProfile:
     return UserProfile(
-        id=row['id'],
-        username=row['id'],
-        role=row['id']
+        id=int(row['id']),
+        username=row['username'],
+        role=row['role']
     )
 
 def get_user_by_id(user_id:int) -> UserProfile | None:
     with get_connection_pr() as connection:
-        row = connection.execute('SELECT * FROM users WHERE id=?',(user_id,)).fetchone()
+        row = connection.execute('SELECT * FROM users').fetchall()
         if row is None:
             return None
-        return row_user(row)
+        tmp_list = []
+        tmp_list2 = []
+        for elem in row:
+            tmp_list.append(elem)
+            tmp_list2.append(elem['id'])
+        for i in tmp_list2:
+            if i == user_id - 1:
+                for j in tmp_list:
+                    if int(j['id']) == i:
+                        print(row_user(j))
+                        return row_user(j)
+        # if row is None:
+        #     return None
+        # return row_user(row)
 
-def get_user_record_by_username(username:str) -> sqlite3.Row | None:
+def get_user_record_by_username(username:str) -> int | None:
     with get_connection_pr() as connection:
-        row = connection.execute('SELECT * FROM users WHERE username=?',(username,)).fetchone()
-        if row is None:
+        # row = connection.execute('SELECT * FROM users WHERE username=?',(username,)).fetchone()
+        row = connection.execute('SELECT * FROM users').fetchall()
+        tmp_list = []
+        tmp_list2 = []
+        for elem in row:
+            tmp_list.append(elem['username'])
+            tmp_list2.append(elem['id'])
+        # print(username)
+        # print(tmp_list)
+        if username in tmp_list:
             return None
-        return row
+        return tmp_list2[-1]
 
-def create_user(username:str,password_hash:str) -> UserProfile | None:
+def create_user(username:str,password_hash:str) -> UserProfile:
     with get_connection_pr() as connection:
         cursor = connection.execute(
             """
@@ -520,6 +543,4 @@ def create_user(username:str,password_hash:str) -> UserProfile | None:
         )
         user_id = cursor.lastrowid
         user = get_user_by_id(user_id)
-        if user is None:
-            return None
         return user

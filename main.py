@@ -65,7 +65,7 @@ def get_pr_id(proj_id: int):
     # for proj in projects:
     #     if proj.id == proj_id:
     #         return proj
-    get_project_by_id(proj_id)
+    return get_project_by_id(proj_id)
 
 
 @app.post("/projects")
@@ -78,7 +78,7 @@ def proj_create(proj_data: ProjectCreate):
     #                   peoples=proj_data.peoples,
     #                   end_time=proj_data.end_time,
     #                   status=proj_data.status)
-    create_project(proj_data)
+    return create_project(proj_data)
 
 
 @app.patch("/projects/{proj_id}")
@@ -96,7 +96,7 @@ def proj_update(proj_id: int, proj_data: ProjectUpdate):
     # upd_proj = projectupd | upd_data
     # projects[proj_ind] = upd_proj
 
-    update_project(proj_id,proj_data)
+    return update_project(proj_id,proj_data)
 
 
 @app.delete("/projects/{proj_id}")
@@ -105,7 +105,7 @@ def del_pr(proj_id: int):
     #     if proj_id == proj.id:
     #         projects.remove(proj)
     # return {'ERROR': 'ERROR'}
-    delete_project(proj_id)
+    return delete_project(proj_id)
 
 
 
@@ -122,7 +122,7 @@ def get_task_id(task_id: int):
     # for task in tasks:
     #     if task.id == task_id:
     #         return task
-    get_task_by_id(task_id)
+    return get_task_by_id(task_id)
 
 
 @app.post('/tasks')
@@ -134,7 +134,7 @@ def post_tasks(task_data: TaskCreate):
     #     status=task_data.status,
     #     priority=task_data.priority,
     #     end_time=task_data.end_time)
-    create_task(task_data)
+    return create_task(task_data)
 
 
 @app.patch('/tasks/{task_id}')
@@ -152,7 +152,7 @@ def patch_task(task_id:int,task_data: TaskUpdate):
     # upd_task = taskupd | upd_data
     # tasks[task_ind] = upd_task
 
-    update_task(task_id,task_data)
+    return update_task(task_id,task_data)
 
 
 @app.delete('/tasks/{task_id}')
@@ -161,7 +161,7 @@ def delete_task(task_id: int):
     #     if task.id == task_id:
     #         tasks.remove(task)
     # return {'error': 'error'}
-    delete_task(task_id)
+    return delete_task(task_id)
 
 
 @app.get('/tasks/status/{status}')
@@ -201,9 +201,9 @@ def get_task_by_id_mainpy(task_id: int) -> StatKorzina | None:
     return None
 
 
-@app.post('/auth/register', response_model=UserProfile)
+@app.post('/auth/register')
 def register(user_data: UserCreate):
-    if database_.get_user_record_by_username(user_data.username) is not None:
+    if database_.get_user_record_by_username(user_data.username) is None:
         raise HTTPException(
             status.HTTP_409_CONFLICT,
             detail='User с таким login уже есть'

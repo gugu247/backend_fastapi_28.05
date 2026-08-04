@@ -58,8 +58,8 @@ class ProjectCreate(BaseModel):
 class ProjectUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=50)
     description: str | None = Field(default=None)
-    tasks: list[Task] | None = Field(default=None)
-    peoples: list[People] | None = Field(default=None)
+    tasks: list[Task] | None | str= Field(default=None)
+    peoples: list[People] | str |None = Field(default=None)
     end_time: str | None = Field(default=None)
     status: str | None = Field(default=None)
 
