@@ -114,7 +114,7 @@ def del_pr(proj_id: int):
 
 @app.get('/tasks')
 def get_tasks():
-    get_task()
+    return get_task()
 
 
 @app.get('/tasks/{task_id}')
@@ -156,7 +156,7 @@ def patch_task(task_id:int,task_data: TaskUpdate):
 
 
 @app.delete('/tasks/{task_id}')
-def delete_task(task_id: int):
+def delete_tk(task_id: int):
     # for task in tasks:
     #     if task.id == task_id:
     #         tasks.remove(task)
@@ -192,6 +192,7 @@ def stat(task_id: int):
             task_stat.append(element_StatKorzina)
             kolvo_stat.append(task)
             database_.count_stat += 1
+            return task_stat, kolvo_stat
 
 
 def get_task_by_id_mainpy(task_id: int) -> StatKorzina | None:

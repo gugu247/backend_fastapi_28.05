@@ -272,6 +272,7 @@ def get_project() -> list[Project]:
         list_temp = []
         for row in rows:
             tempProject = row_project(row)
+            print(tempProject)
             list_temp.append(tempProject)
         return list_temp
 
@@ -329,7 +330,7 @@ def update_project(project_id: int, project: ProjectUpdate) -> Project | None:
         if updates:
             for key, value in updates.items(): #key - это izmen_fields, то есть ячейки таблицы
                 print(key, value)
-                connection.execute(f"UPDATE projects SET {key} = {value} WHERE id={project_id}")
+                connection.execute(f"UPDATE projects SET {key} = '{value}' WHERE id={project_id}")
         row = connection.execute("""SELECT * FROM projects WHERE id=?""",(project_id,)).fetchone()
         return row_project(row)
 
@@ -347,23 +348,23 @@ def delete_project(project_id:int) -> bool:
 
 
 def row_task(row:sqlite3.Row) -> Task: #Переводим из формата sql в формат python
-    newTask = Task(
-        id=row['id'],
-        title=row['title'],
-        description=row['description'],
-        status=row['status'],
-        priority=row['priority'],
-        end_time=row['end_time'],
+    return Task(
+        id=int(row["id"]),
+        title=row["title"],
+        description=row["description"],
+        status=row["status"],
+        priority=row["priority"],
+        end_time=row["end_time"],
     )
-    return newTask
-
+   
 def get_task() -> list[Task]:
     with get_connection_pr() as connection:
         rows = connection.execute('SELECT * FROM tasks ORDER BY id').fetchall()
         list_temp = []
         for row in rows:
             tempTask = row_task(row)
-            list_temp(tempTask)
+            print(tempTask)
+            list_temp.append(tempTask)
         return list_temp
 
 def get_task_by_id(task_id:int) -> Task | None:
@@ -377,7 +378,7 @@ def create_task(task: TaskCreate) -> Task:
     with get_connection_pr() as connection:
         cursor = connection.execute(
             """
-            INSERT INTO projects (
+            INSERT INTO tasks (
                 title,
                 description,
                 status,
@@ -405,8 +406,8 @@ def update_task(task_id: int, task: TaskUpdate) -> Task | None:
         if connection.execute("""SELECT 1 FROM tasks WHERE id=?""",(task_id,)).fetchone() is None:
             return None
         if updates:
-            for key, value in updates: #key - это izmen_fields, то есть ячейки таблицы
-                connection.execute(f"UPDATE tasks SET {key} = {value} WHERE id={task_id}")
+            for key, value in updates.items(): #key - это izmen_fields, то есть ячейки таблицы
+                connection.execute(f"UPDATE tasks SET {key} = '{value}' WHERE id={task_id}")
         row = connection.execute("""SELECT * FROM tasks WHERE id=?""",(task_id,)).fetchone()
         return row_task(row)
 
@@ -451,7 +452,7 @@ def create_people(people: PeopleCreate) -> People:
     with get_connection_pr() as connection:
         cursor = connection.execute(
             """
-            INSERT INTO projects (
+            INSERT INTO peoples (
                 name
             )
             VALUES (?)
@@ -471,8 +472,8 @@ def update_people(people_id: int, people: PeopleUpdate) -> People | None:
         if connection.execute("""SELECT 1 FROM peoples WHERE id=?""",(people_id,)).fetchone() is None:
             return None
         if updates:
-            for key, value in updates: #key - это izmen_fields, то есть ячейки таблицы
-                connection.execute(f"UPDATE peoples SET {key} = {value} WHERE id={people_id}")
+            for key, value in updates.items(): #key - это izmen_fields, то есть ячейки таблицы
+                connection.execute(f"UPDATE peoples SET {key} = '{value}' WHERE id={people_id}")
         row = connection.execute("""SELECT * FROM peoples WHERE id=?""",(people_id,)).fetchone()
         return row_people(row)
 
