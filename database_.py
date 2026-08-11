@@ -156,8 +156,17 @@ proj1 = Project(
     end_time="2026-09-01",
     status="OK")
 
+proj2 = Project(
+    id=2,
+    title="Jobergerg",
+    description="Zarabotsdefaftdsedf na leto",
+    tasks=tasks,
+    peoples=peoples,
+    end_time="2026-09-01",
+    status="NONONONOONONO")
+
 projects = [
-    proj1,
+    proj1, proj2
 ]
 
 
@@ -244,7 +253,7 @@ def zapoln_defaults():
             for people in peoples:
                 connection.execute(
                     """
-                    INSERT INTO tasks (
+                    INSERT INTO peoples (
                         name
                     )
                     VALUES(?)
