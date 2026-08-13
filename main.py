@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 import database_
 from schemas import Project, ProjectCreate, ProjectUpdate, Task, People, Filter, ItogFilter, TaskCreate, TaskUpdate, \
-    StatKolvo, StatKorzina, StatKorzinaInfo, UserProfile, UserCreate, Token
+    StatKolvo, StatKorzina, StatKorzinaInfo, UserProfile, UserCreate, Token, PeopleCreate,PeopleUpdate
 from database_ import projects, tasks, task_stat, kolvo_stat, count_stat
 from database_ import get_project,get_project_by_id,get_people,get_people_by_id,get_task,get_task_by_id,create_project,create_task, \
 create_people,update_project,update_task,update_people,delete_project,delete_task,delete_people
@@ -122,8 +122,8 @@ def get_task_id(task_id: int):
     return get_task_by_id(task_id)
 
 
-@app.post('/tasks')
-def post_tasks(task_data: TaskCreate):
+@app.post('/tasks/{proj_id}')
+def post_tasks(task_data: TaskCreate, proj_id:int):
     # task = Task(
     #     id=tasks[-1].id + 1,
     #     title=task_data.title,
@@ -131,7 +131,7 @@ def post_tasks(task_data: TaskCreate):
     #     status=task_data.status,
     #     priority=task_data.priority,
     #     end_time=task_data.end_time)
-    return create_task(task_data)
+    return create_task(task_data, proj_id)
 
 
 @app.patch('/tasks/{task_id}')
@@ -197,6 +197,18 @@ def get_task_by_id_mainpy(task_id: int) -> StatKorzina | None:
         if task.task_id == task_id:
             return task
     return None
+
+
+
+
+@app.get('/peoples/{people_id}')
+def get_people_id(people_id: int):
+    return get_people_by_id(people_id)
+
+@app.get('/peoples/{proj_id}')
+def post_peoples(proj_id: int, people: PeopleCreate):
+    return create_people(proj_id,people)
+
 
 
 @app.post('/auth/register')

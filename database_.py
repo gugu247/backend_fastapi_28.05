@@ -56,7 +56,8 @@ def create_table_task():
                     description TEXT NOT NULL,
                     status TEXT NOT NULL,
                     priority INTEGER,
-                    end_time TEXT NOT NULL
+                    end_time TEXT NOT NULL,
+                    proj_id INTEGER NOT NULL
                 )
             """
         )
@@ -74,7 +75,8 @@ def create_table_pl():
             """
                 CREATE TABLE IF NOT EXISTS peoples (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL DEFAULT []
+                    name TEXT NOT NULL DEFAULT [],
+                    proj_id INTEGER NOT NULL
                 )
             """
         )
@@ -105,7 +107,8 @@ task1 = Task(
     description='Chto mne nuzhno ot raboti, kakaya nuzhna i t.d.',
     status='done',
     priority=1,
-    end_time='2026-06-05')
+    end_time='2026-06-05',
+    proj_id=1)
 
 task2 = Task(
     id=2,
@@ -113,7 +116,8 @@ task2 = Task(
     description='50k',
     status='in_progress',
     priority=2,
-    end_time='2026-07-01')
+    end_time='2026-07-01',
+    proj_id=1)
 
 task3 = Task(
     id=3,
@@ -121,7 +125,8 @@ task3 = Task(
     description='100k',
     status='new',
     priority=3,
-    end_time='2026-08-01')
+    end_time='2026-08-01',
+    proj_id=1)
 
 task4 = Task(
     id=4,
@@ -129,13 +134,14 @@ task4 = Task(
     description='150k',
     status='new',
     priority=4,
-    end_time='2026-09-01')
+    end_time='2026-09-01',
+    proj_id=1)
 
 tasks=[
     task1,task2,task3,task4
 ]
 
-peoples = [People(id=1,name='Chel1'),People(id=2,name='Chel2')]
+peoples = [People(id=1,name='Chel1',proj_id=1),People(id=2,name='Chel2',proj_id=1)]
 
 
 task_stat: list[StatKorzina] = []
@@ -224,44 +230,51 @@ def zapoln_defaults():
         if task_len > 0:
             return "OK task is exist"
         else:
-            for task in tasks:
-                connection.execute(
-                    """
-                    INSERT INTO tasks (
-                        title,
-                        description,
-                        status,
-                        priority,
-                        end_time
+            for project in projects:
+
+                for task in tasks:
+                    connection.execute(
+                        """
+                        INSERT INTO tasks (
+                            title,
+                            description,
+                            status,
+                            priority,
+                            end_time,
+                            proj_id
+                        )
+                        VALUES (?,?,?,?,?,?)
+                        """,
+                        (
+                            task.title,
+                            task.description,
+                            task.status,
+                            task.priority,
+                            task.end_time,
+                            project.id
+                        )
                     )
-                    VALUES (?,?,?,?,?)
-                    """,
-                    (
-                        task.title,
-                        task.description,
-                        task.status,
-                        task.priority,
-                        task.end_time,
-                    )
-                )
     
     with get_connection_pr() as connection:
         people_len = connection.execute('SELECT COUNT(*) FROM peoples').fetchone()[0]
         if people_len > 0:
             return "OK people is exist"
         else:
-            for people in peoples:
-                connection.execute(
-                    """
-                    INSERT INTO peoples (
-                        name
+            for project in projects:
+                for people in peoples:
+                    connection.execute(
+                        """
+                        INSERT INTO peoples (
+                            name,
+                            proj_id
+                        )
+                        VALUES(?,?)
+                        """,
+                        (
+                            people.name,
+                            project.id
+                        )
                     )
-                    VALUES(?)
-                    """,
-                    (
-                        people.name
-                    )
-                )
 
 
 def row_project(row:sqlite3.Row) -> Project: #Переводим из формата sql в формат python
@@ -364,6 +377,7 @@ def row_task(row:sqlite3.Row) -> Task: #Переводим из формата s
         status=row["status"],
         priority=row["priority"],
         end_time=row["end_time"],
+        proj_id=int(row["proj_id"])
     )
    
 def get_task() -> list[Task]:
@@ -376,37 +390,47 @@ def get_task() -> list[Task]:
             list_temp.append(tempTask)
         return list_temp
 
-def get_task_by_id(task_id:int) -> Task | None:
+def get_task_by_id(task_id:int) -> list[Task] | None:
     with get_connection_pr() as connection:
-        row = connection.execute('SELECT * FROM tasks WHERE id=?',(task_id,)).fetchone()
-    if row is None:
-        return None
-    return row_task(row)
+        rows = connection.execute('SELECT * FROM tasks WHERE proj_id=?',(task_id,)).fetchall()
+        list_temp = []
+        if rows is None:
+            return None
+        for row in rows:
+            tempTask = row_task(row)
+            print(tempTask)
+            list_temp.append(tempTask)
+        return list_temp
 
-def create_task(task: TaskCreate) -> Task:
+def create_task(task: TaskCreate, proj_id) -> Task:
     with get_connection_pr() as connection:
-        cursor = connection.execute(
-            """
-            INSERT INTO tasks (
-                title,
-                description,
-                status,
-                priority,
-                end_time
-            )
-            VALUES (?,?,?,?,?)
-            """,
-            (
-                task.title,
-                task.description,
-                task.status,
-                task.priority,
-                task.end_time
-            )
-        )
-        task_id = int(cursor.lastrowid)
-        row = connection.execute("""SELECT * FROM tasks WHERE id= ?""",(task_id,)).fetchone()
-        return row_task(row)
+        for project in projects:
+            if project.id == proj_id:
+
+                cursor = connection.execute(
+                    """
+                    INSERT INTO tasks (
+                        title,
+                        description,
+                        status,
+                        priority,
+                        end_time,
+                        proj_id
+                    )
+                    VALUES (?,?,?,?,?,?)
+                    """,
+                    (
+                        task.title,
+                        task.description,
+                        task.status,
+                        task.priority,
+                        task.end_time,
+                        project.id
+                    )
+                )
+                task_id = int(cursor.lastrowid)
+                row = connection.execute("""SELECT * FROM tasks WHERE id= ?""",(task_id,)).fetchone()
+                return row_task(row)
 
 def update_task(task_id: int, task: TaskUpdate) -> Task | None:
     updates = task.model_dump(exclude_unset=True)
@@ -436,8 +460,9 @@ def delete_task(tasks_id:int) -> bool:
 
 def row_people(row:sqlite3.Row) -> People:
     newPeople = People(
-        id=row['id'],
-        name=row['name']
+        id=int(row['id']),
+        name=row['name'],
+        proj_id=int(row['proj_id'])
     )
     return newPeople
 
@@ -450,29 +475,38 @@ def get_people() -> list[People]:
             list_tmp.append(row_tmp)
         return list_tmp
 
-def get_people_by_id(people_id:int) -> People | None:
+def get_people_by_id(people_id:int) -> list[People] | None:
     with get_connection_pr() as connection:
-        row = connection.execute('SELECT * FROM peoples WHERE id=?',(people_id,)).fetchone()
-        if row is None:
+        rows = connection.execute('SELECT * FROM peoples WHERE proj_id=?',(people_id,)).fetchall()
+        list_temp = []
+        if rows is None:
             return None
-        return row_people(row)
+        for row in rows:
+            tempPeople = row_people(row)
+            print(tempPeople)
+            list_temp.append(tempPeople)
+        return list_temp
     
-def create_people(people: PeopleCreate) -> People:
+def create_people(proj_id:int, people: PeopleCreate) -> People:
     with get_connection_pr() as connection:
-        cursor = connection.execute(
-            """
-            INSERT INTO peoples (
-                name
-            )
-            VALUES (?)
-            """,
-            (
-                people.name
-            )
-        )
-        people_id = int(cursor.lastrowid)
-        row = connection.execute("""SELECT * FROM peoples WHERE id= ?""",(people_id,)).fetchone()
-        return row_people(row)
+        for project in projects:
+            if project.id == proj_id:
+                cursor = connection.execute(
+                    """
+                    INSERT INTO peoples (
+                        name,
+                        proj_id
+                    )
+                    VALUES (?,?)
+                    """,
+                    (
+                        people.name,
+                        project.id
+                    )
+                )
+                people_id = int(cursor.lastrowid)
+                row = connection.execute("""SELECT * FROM peoples WHERE id= ?""",(people_id,)).fetchone()
+                return row_people(row)
 
 def update_people(people_id: int, people: PeopleUpdate) -> People | None:
     updates = people.model_dump(exclude_unset=True)

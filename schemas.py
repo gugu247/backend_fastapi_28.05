@@ -7,6 +7,7 @@ class TaskCreate(BaseModel):
     status: str = Field(min_length=1,max_length=15)
     priority: int = Field(ge=1,le=5)
     end_time: str = Field(min_length=10,max_length=10)
+    proj_id: int
 
 class TaskUpdate(BaseModel):
     title: str | None = Field(default=None,min_length=2,max_length=80)
@@ -14,6 +15,7 @@ class TaskUpdate(BaseModel):
     status: str | None = Field(default=None,min_length=1,max_length=15)
     priority: int | None = Field(default=None,ge=1,le=5)
     end_time: str | None = Field(default=None,min_length=10,max_length=10)
+    proj_id:int
 
 class Task(TaskCreate):
     id: int
@@ -35,6 +37,7 @@ class StatKolvo(BaseModel):
 
 class PeopleCreate(BaseModel):
     name: str = Field(min_length=2,max_length=80)
+    proj_id:int
 
 class PeopleUpdate(BaseModel):
     name: str | None = Field(default=None,min_length=2,max_length=80)
