@@ -205,7 +205,7 @@ def get_task_by_id_mainpy(task_id: int) -> StatKorzina | None:
 def get_people_id(people_id: int):
     return get_people_by_id(people_id)
 
-@app.get('/peoples/{proj_id}')
+@app.post('/peoples/{proj_id}')
 def post_peoples(proj_id: int, people: PeopleCreate):
     return create_people(proj_id,people)
 
