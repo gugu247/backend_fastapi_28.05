@@ -5,16 +5,16 @@ class TaskCreate(BaseModel):
     title: str = Field(min_length=2,max_length=80)
     description: str = Field(min_length=1,max_length=300)
     status: str = Field(min_length=1,max_length=15)
-    priority: int = Field(ge=1,le=5)
-    end_time: str = Field(min_length=10,max_length=10)
+    priority: int | str
+    end_time: str
     proj_id: int
 
 class TaskUpdate(BaseModel):
     title: str | None = Field(default=None,min_length=2,max_length=80)
     description: str | None = Field(default=None,min_length=1,max_length=300)
     status: str | None = Field(default=None,min_length=1,max_length=15)
-    priority: int | None = Field(default=None,ge=1,le=5)
-    end_time: str | None = Field(default=None,min_length=10,max_length=10)
+    priority: int | None | str
+    end_time: str | None
     proj_id:int
 
 class Task(TaskCreate):

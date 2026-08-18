@@ -375,7 +375,7 @@ def row_task(row:sqlite3.Row) -> Task: #Переводим из формата s
         title=row["title"],
         description=row["description"],
         status=row["status"],
-        priority=row["priority"],
+        priority=int(row["priority"]),
         end_time=row["end_time"],
         proj_id=int(row["proj_id"])
     )
@@ -390,9 +390,9 @@ def get_task() -> list[Task]:
             list_temp.append(tempTask)
         return list_temp
 
-def get_task_by_id(task_id:int) -> list[Task] | None:
+def get_tasks_by_proj_id(proj_id:int) -> list[Task] | None:
     with get_connection_pr() as connection:
-        rows = connection.execute('SELECT * FROM tasks WHERE proj_id=?',(task_id,)).fetchall()
+        rows = connection.execute('SELECT * FROM tasks WHERE proj_id=?',(proj_id,)).fetchall()
         list_temp = []
         if rows is None:
             return None
@@ -401,6 +401,20 @@ def get_task_by_id(task_id:int) -> list[Task] | None:
             print(tempTask)
             list_temp.append(tempTask)
         return list_temp
+
+def get_task_by_id(proj_id:int,task_id:int) -> Task | None:
+    with get_connection_pr() as connection:
+        rows = connection.execute('SELECT * FROM tasks WHERE proj_id=?',(proj_id,)).fetchall()
+        list_temp = []
+        if rows is None:
+            return None
+        for row in rows:
+            tempTask = row_task(row)
+            print(tempTask)
+            list_temp.append(tempTask)
+        for task in list_temp:
+            if task.id == task_id:
+                return task
 
 def create_task(task: TaskCreate, proj_id) -> Task:
     with get_connection_pr() as connection:
