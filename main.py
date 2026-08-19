@@ -9,8 +9,8 @@ import database_
 from schemas import Project, ProjectCreate, ProjectUpdate, Task, People, Filter, ItogFilter, TaskCreate, TaskUpdate, \
     StatKolvo, StatKorzina, StatKorzinaInfo, UserProfile, UserCreate, Token, PeopleCreate,PeopleUpdate
 from database_ import projects, tasks, task_stat, kolvo_stat, count_stat
-from database_ import get_project,get_project_by_id,get_people,get_people_by_id,get_task,get_task_by_id,create_project,create_task, \
-create_people,update_project,update_task,update_people,delete_project,delete_task,delete_people
+from database_ import get_project,get_project_by_id,get_people,get_people_by_id,get_task,get_tasks_by_proj_id,create_project,create_task, \
+create_people,update_project,update_task,update_people,delete_project,delete_task,delete_people,get_task_by_id
 
 import auth
 from fastapi import HTTPException, status
@@ -114,13 +114,16 @@ def get_tasks():
     return get_task()
 
 
-@app.get('/tasks/{task_id}')
-def get_task_id(task_id: int):
+@app.get('/tasks/{proj_id}')
+def get_tasks_proj_id(proj_id: int):
     # for task in tasks:
     #     if task.id == task_id:
     #         return task
-    return get_task_by_id(task_id)
+    return get_tasks_by_proj_id(proj_id)
 
+@app.get('/tasks/{proj_id}/{task_id}')
+def get_task_id(proj_id:int,task_id:int):
+    return get_task_by_id(proj_id,task_id)
 
 @app.post('/tasks/{proj_id}')
 def post_tasks(task_data: TaskCreate, proj_id:int):
